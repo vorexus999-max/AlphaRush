@@ -1,331 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Word Scramble – Difficulty Mode (99 words)</title>
+<meta charset="UTF-8">
+<title>Word Scramble Game</title>
 <style>
-  body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f3f3f3; color:#111; }
-  h1{margin-bottom:6px}
-  .modeBtn { display:block; width:220px; margin:10px auto; padding:12px 16px; font-size:18px; border-radius:8px; cursor:pointer; }
-  #game { display:none; margin-top:10px; }
-  #scrambled { font-size:36px; letter-spacing:10px; margin:18px 0; font-weight:bold; }
-  .letter { display:inline-block; padding:12px 14px; margin:6px; background:#fff; border:2px solid #000; border-radius:8px; font-size:22px; cursor:pointer; user-select:none; }
-  #answer { font-size:24px; min-height:36px; margin:12px 0; }
-  #timerText { font-size:20px; color:#c00; margin-top:6px; }
-  #lastQuestionBtn { display:none; margin-top:18px; padding:10px 16px; font-size:18px; cursor:pointer; }
-  #lastQuestionPanel { display:none; margin-top:16px; }
-  .smallBtn { padding:8px 12px; margin:8px; font-size:16px; cursor:pointer; }
-  #completed { display:none; font-size:32px; font-weight:bold; color:green; margin-top:18px; }
-  #scoreBoard { margin-top:6px; font-size:18px; }
+    body { font-family: Arial; background: #f2f2f2; padding: 20px; }
+    #game, #completed { display: none; }
+    #scrambled { font-size: 32px; font-weight: bold; letter-spacing: 5px; }
+    #timer { font-size: 22px; color: red; }
+    button { padding: 10px 20px; margin-top: 10px; font-size: 16px; }
 </style>
 </head>
 <body>
-<h1>WORD SCRAMBLE</h1>
-<p>Select difficulty — each difficulty has 33 levels</p>
 
-<!-- MENU -->
+<h2>WORD SCRAMBLE GAME</h2>
+
 <div id="menu">
-  <button class="modeBtn" onclick="startMode('easy')">EASY (4 letters, no timer)</button>
-  <button class="modeBtn" onclick="startMode('medium')">MEDIUM (5–6 letters, 90s per level)</button>
-  <button class="modeBtn" onclick="startMode('hard')">HARD (6–7 letters, 60s per level)</button>
+    <h3>Pilih Difficulty</h3>
+    <button onclick="startGame('easy')">Easy (No Timer)</button>
+    <button onclick="startGame('medium')">Medium (90s)</button>
+    <button onclick="startGame('hard')">Hard (60s)</button>
 </div>
 
-<!-- GAME -->
 <div id="game">
-  <h3 id="difficultyText"></h3>
-  <div id="scoreBoard">
-    <span id="levelText">Level 1 / 33</span> &nbsp;|&nbsp; <span id="scoreText">Score: 0</span>
-  </div>
-  <div id="timerText"></div>
+    <h3>Difficulty: <span id="diffLabel"></span></h3>
+    <div>Level: <span id="levelLabel"></span> / 100</div>
+    <div>Score: <span id="scoreLabel"></span></div>
+    <div id="timer"></div>
+    <p id="scrambled"></p>
 
-  <div id="scrambled">SCRAM</div>
-  <div id="letterButtons"></div>
+    <input id="answer" placeholder="Your answer..." autocomplete="off">
+    <button onclick="checkWord()">Submit</button>
+</div>
 
-  <h4>Your Answer:</h4>
-  <div id="answer"></div>
-
-  <div style="margin-top:12px;">
-    <button onclick="resetAnswer()" class="smallBtn">Clear</button>
-  </div>
-
-  <div id="lastQuestionBtnWrap" style="margin-top:18px;">
-    <button id="lastQuestionBtn" onclick="showLastQuestion()">Last Question</button>
-  </div>
-
-  <div id="lastQuestionPanel">
-    <p style="font-size:18px; font-weight:bold;">Do you want to make a game with me?</p>
-    <button class="smallBtn" onclick="lastQuestionAnswer(true)">YES</button>
-    <button class="smallBtn" onclick="lastQuestionAnswer(false)">NO</button>
-    <div id="lastQuestionResult" style="margin-top:12px; font-size:18px; font-weight:bold;"></div>
-  </div>
-
-  <div id="completed">COMPLETED!</div>
+<div id="completed">
+    <h2>COMPLETED!</h2>
+    <p>Score kamu: <span id="finalScore"></span></p>
+    <button onclick="resetProgress()">Restart</button>
 </div>
 
 <script>
-/*
-  3 difficulty lists (33 words each). Each entry: {word: "ORIGINAL", scrambled: "SCRAMBLED"}
-  - Easy: 4 letters
-  - Medium: 5-6 letters
-  - Hard: 6-7 letters
-  Total 99 words.
-*/
-
-// EASY (33 words, 4 letters)
-const easyWords = [
-  {word:"TIME",    scrambled:"IMET"},
-  {word:"PLAY",    scrambled:"YPLA"},
-  {word:"CODE",    scrambled:"DECO"},
-  {word:"GAME",    scrambled:"GEMA"},
-  {word:"NOTE",    scrambled:"TONE"},
-  {word:"HAND",    scrambled:"NDHA"},
-  {word:"FISH",    scrambled:"HSIF"},
-  {word:"BOOK",    scrambled:"OKOB"},
-  {word:"TREE",    scrambled:"ETER"},
-  {word:"WIND",    scrambled:"NDWI"},
-  {word:"ROAD",    scrambled:"ADOR"},
-  {word:"MIND",    scrambled:"DMNI"},
-  {word:"LOVE",    scrambled:"VLEO"},
-  {word:"STAR",    scrambled:"TSAR"},
-  {word:"MOON",    scrambled:"ONOM"},
-  {word:"BIRD",    scrambled:"RIBD"},
-  {word:"FOOD",    scrambled:"ODFO"},
-  {word:"CITY",    scrambled:"TYCI"},
-  {word:"KING",    scrambled:"GNIK"},
-  {word:"LAMP",    scrambled:"ALMP"},
-  {word:"GIFT",    scrambled:"FTIG"},
-  {word:"FIRE",    scrambled:"RIFE"},
-  {word:"WALL",    scrambled:"LWAL"},
-  {word:"DAWN",    scrambled:"NWDA"},
-  {word:"DUST",    scrambled:"TDSU"},
-  {word:"SOUL",    scrambled:"OSLU"},
-  {word:"ECHO",    scrambled:"OCEH"},
-  {word:"RAIN",    scrambled:"IRAN"},
-  {word:"SNOW",    scrambled:"WONS"},
-  {word:"HOPE",    scrambled:"PEHO"},
-  {word:"TAIL",    scrambled:"ILAT"},
-  {word:"JUMP",    scrambled:"PMUJ"},
-  {word:"BALL",    scrambled:"LALB"}
+// =====================
+// WORD LIST (100 KATA)
+// =====================
+const wordList = [
+"apple","bread","chair","dream","earth","fruit","ghost","honey","islet","joker",
+"kneel","lemon","maple","night","ocean","prism","queen","river","stone","trace",
+"union","vapor","water","xenon","yield","zebra","angel","blaze","crown","demon",
+"ember","flare","grant","heart","ivory","jelly","koala","light","mango","nylon",
+"opera","pilot","quill","robot","scale","tweet","ultra","voice","whale","xylem",
+"yacht","zones","amber","brine","climb","drape","eagle","frost","glide","hound",
+"inlet","judge","knock","lunar","medal","noble","omega","phase","quart","rival",
+"solid","trust","urban","vital","woven","xerox","young","zesty","altar","beach",
+"candy","dairy","elite","fiber","giant","habit","index","jumps","karma","liver",
+"mirth","nerve","orbit","piano","quark","rigid","solar","trend","unity","virus"
 ];
 
-// MEDIUM (33 words, 5-6 letters)
-const mediumWords = [
-  {word:"APPLE",  scrambled:"PLEAP"},
-  {word:"LEMON",  scrambled:"MELON"},
-  {word:"PLANE",  scrambled:"ALPNE"},
-  {word:"SNAKE",  scrambled:"KNEAS"},
-  {word:"BRAVE",  scrambled:"VEBRA"},
-  {word:"STONE",  scrambled:"TSONE"},
-  {word:"CLOUD",  scrambled:"CLODU"},
-  {word:"WATCH",  scrambled:"WTCHA"},
-  {word:"BRUSH",  scrambled:"HBSUR"},
-  {word:"HEART",  scrambled:"TEHRA"},
-  {word:"SMILE",  scrambled:"SILEM"},
-  {word:"BREAD",  scrambled:"DAERB"},
-  {word:"PHONE",  scrambled:"EHPON"},
-  {word:"LIGHT",  scrambled:"GHLIT"},
-  {word:"CHAIN",  scrambled:"CAHIN"},
-  {word:"TABLE",  scrambled:"TALBE"},
-  {word:"TRAIN",  scrambled:"TNRIA"},
-  {word:"ROBOT",  scrambled:"OBROT"},
-  {word:"CABLE",  scrambled:"CALBE"},
-  {word:"FRUIT",  scrambled:"FURIT"},
-  {word:"HOUSE",  scrambled:"HSOUE"},
-  {word:"SMOKE",  scrambled:"SOMKE"},
-  {word:"WORLD",  scrambled:"WODLR"},
-  {word:"GHOST",  scrambled:"GHSOT"},
-  {word:"RADIO",  scrambled:"RAODI"},
-  {word:"VIDEO",  scrambled:"VOEDI"},
-  {word:"BLADE",  scrambled:"BALDE"},
-  {word:"SOUND",  scrambled:"SONUD"},
-  {word:"MUSIC",  scrambled:"MUICS"},
-  {word:"PILLOW", scrambled:"WILLPO"},
-  {word:"CANDLE", scrambled:"NACLDE"},
-  {word:"MARKER", scrambled:"MAKRER"}
-];
+// =====================
+// SAVE & LOAD PROGRESS
+// =====================
+function saveProgress() {
+    localStorage.setItem("scrambleLevel", level);
+    localStorage.setItem("scrambleScore", score);
+    localStorage.setItem("scrambleDifficulty", difficulty);
+}
 
-// HARD (33 words, 6-7 letters)
-const hardWords = [
-  {word:"WINDOW",  scrambled:"WNIDOW"},
-  {word:"COOKIE",  scrambled:"COKIEO"},
-  {word:"BOTTLE",  scrambled:"BTTOLE"},
-  {word:"PENCIL",  scrambled:"PECNIL"},
-  {word:"BANANA",  scrambled:"NBAANA"},
-  {word:"MIRROR",  scrambled:"RIRROM"},
-  {word:"FAMILY",  scrambled:"FMAILY"},
-  {word:"JUNGLE",  scrambled:"GJUNLE"},
-  {word:"PLANET",  scrambled:"PETLAN"},
-  {word:"GARDEN",  scrambled:"RDGANE"},
-  {word:"BRIDGE",  scrambled:"GIBDER"},
-  {word:"FOREST",  scrambled:"RFOETS"},
-  {word:"BALLOON", scrambled:"LBALOON"},
-  {word:"GRAPHIC", scrambled:"RAPHGIC"},
-  {word:"COMPUTE", scrambled:"MOPUTEC"},
-  {word:"PROGRAM", scrambled:"RGOPRAM"},
-  {word:"LIBRARY", scrambled:"RILBRAY"},
-  {word:"AMAZING", scrambled:"ZAMINAG"},
-  {word:"CAPTURE", scrambled:"ACTPRUE"},
-  {word:"VIRTUAL", scrambled:"RVITUAL"},
-  {word:"NETWORK", scrambled:"NTWREOK"},
-  {word:"DISPLAY", scrambled:"SPDIALY"},
-  {word:"ELEMENT", scrambled:"MTEELEN"},
-  {word:"CENTRAL", scrambled:"RNCTEAL"},
-  {word:"THERMAL", scrambled:"MTHERAL"},
-  {word:"MISSION", scrambled:"ISMONSI"},
-  {word:"JOURNEY", scrambled:"RNEYJOU"},
-  {word:"SIGNALS", scrambled:"GNSALIS"},
-  {word:"VISION",  scrambled:"ISVION"},
-  {word:"DYNAMIC", scrambled:"NMYIDAC"},
-  {word:"OUTCOME", scrambled:"TOUCOME"},
-  {word:"BALANCE", scrambled:"ACLNEBA"},
-  {word:"FREIGHT", scrambled:"GHTFIER"}
-];
+function loadProgress() {
+    const L = localStorage.getItem("scrambleLevel");
+    const S = localStorage.getItem("scrambleScore");
+    const D = localStorage.getItem("scrambleDifficulty");
 
-// Game state
-let mode = "";
-let activeList = [];
-let levelIndex = 0;      // 0..32
+    if (L && S && D) {
+        level = parseInt(L);
+        score = parseInt(S);
+        difficulty = D;
+        return true;
+    }
+    return false;
+}
+
+function resetProgress() {
+    localStorage.removeItem("scrambleLevel");
+    localStorage.removeItem("scrambleScore");
+    localStorage.removeItem("scrambleDifficulty");
+    location.reload();
+}
+
+// =====================
+// GAME LOGIC
+// =====================
+let level = 1;
 let score = 0;
-let currentAnswer = "";
-let timerID = null;
-let timeLeft = 0;
+let difficulty = "";
+let timer = 0;
+let interval;
 
-// Start chosen mode
-function startMode(selected){
-  mode = selected;
-  // pick active list
-  if(mode === "easy") activeList = easyWords.slice();
-  else if(mode === "medium") activeList = mediumWords.slice();
-  else if(mode === "hard") activeList = hardWords.slice();
-
-  // reset state
-  levelIndex = 0;
-  score = 0;
-  currentAnswer = "";
-  clearInterval(timerID);
-  document.getElementById("menu").style.display = "none";
-  document.getElementById("lastQuestionBtn").style.display = "none";
-  document.getElementById("lastQuestionPanel").style.display = "none";
-  document.getElementById("lastQuestionResult").innerText = "";
-  document.getElementById("completed").style.display = "none";
-  document.getElementById("game").style.display = "block";
-  document.getElementById("difficultyText").innerText = "Difficulty: " + mode.toUpperCase();
-  loadLevel();
+function scramble(word) {
+    return word.split("").sort(() => Math.random() - 0.5).join("");
 }
 
-// Load current level
-function loadLevel(){
-  // completed mode?
-  if(levelIndex >= activeList.length){
-    // Show Last Question button (instead of auto completed)
-    document.getElementById("scrambled").innerText = "";
-    document.getElementById("letterButtons").innerHTML = "";
-    document.getElementById("answer").innerText = "";
-    document.getElementById("levelText").innerText = "All levels completed!";
-    document.getElementById("scoreText").innerText = "Score: " + score;
-    document.getElementById("timerText").innerText = "";
-    document.getElementById("lastQuestionBtn").style.display = "inline-block";
-    return;
-  }
+function startGame(diff) {
+    difficulty = diff;
 
-  const entry = activeList[levelIndex];
-  document.getElementById("levelText").innerText = "Level " + (levelIndex+1) + " / " + activeList.length;
-  document.getElementById("scoreText").innerText = "Score: " + score;
-  document.getElementById("scrambled").innerText = entry.scrambled;
-  document.getElementById("answer").innerText = "";
-  currentAnswer = "";
+    // If progress exists AND same difficulty → load it
+    if (loadProgress() && difficulty === localStorage.getItem("scrambleDifficulty")) {
+        // lanjut progress
+    } else {
+        // mulai baru
+        level = 1;
+        score = 0;
+    }
 
-  // render letter buttons
-  const cont = document.getElementById("letterButtons");
-  cont.innerHTML = "";
-  [...entry.scrambled].forEach(ch=>{
-    const d = document.createElement("div");
-    d.className = "letter";
-    d.innerText = ch;
-    d.onclick = () => {
-      currentAnswer += ch;
-      document.getElementById("answer").innerText = currentAnswer;
-      checkAnswer();
-    };
-    cont.appendChild(d);
-  });
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("game").style.display = "block";
 
-  // timer per difficulty
-  clearInterval(timerID);
-  if(mode === "medium"){
-    timeLeft = 90;
-    document.getElementById("timerText").innerText = "Time left: " + timeLeft + "s";
-    timerID = setInterval(()=>{
-      timeLeft--;
-      document.getElementById("timerText").innerText = "Time left: " + timeLeft + "s";
-      if(timeLeft <= 0){
-        clearInterval(timerID);
-        // move to next level automatically
-        levelIndex++;
-        loadLevel();
-      }
+    document.getElementById("diffLabel").innerText = difficulty.toUpperCase();
+    nextLevel();
+}
+
+function startTimer() {
+    clearInterval(interval);
+
+    if (difficulty === "easy") {
+        document.getElementById("timer").innerText = "";
+        return;
+    }
+
+    timer = difficulty === "medium" ? 90 : 60;
+
+    interval = setInterval(() => {
+        timer--;
+        document.getElementById("timer").innerText = "Time: " + timer;
+
+        if (timer <= 0) {
+            clearInterval(interval);
+            showCompleted();
+        }
     }, 1000);
-  } else if(mode === "hard"){
-    timeLeft = 60;
-    document.getElementById("timerText").innerText = "Time left: " + timeLeft + "s";
-    timerID = setInterval(()=>{
-      timeLeft--;
-      document.getElementById("timerText").innerText = "Time left: " + timeLeft + "s";
-      if(timeLeft <= 0){
-        clearInterval(timerID);
-        levelIndex++;
-        loadLevel();
-      }
-    }, 1000);
-  } else {
-    // easy
-    document.getElementById("timerText").innerText = "";
-  }
 }
 
-// check the clicked-answer (we compare to original word)
-function checkAnswer(){
-  const entry = activeList[levelIndex];
-  if(currentAnswer === entry.word){
-    // correct
-    score++;
-    levelIndex++;
-    clearInterval(timerID);
-    loadLevel();
-  } else {
-    // if length equals word length but wrong, do nothing (player can clear)
-    // we won't penalize, but you can add visual feedback here
-  }
+function nextLevel() {
+    if (level > 100) {
+        showCompleted();
+        return;
+    }
+
+    currentWord = wordList[level - 1];
+    document.getElementById("scrambled").innerText = scramble(currentWord);
+    document.getElementById("levelLabel").innerText = level;
+    document.getElementById("scoreLabel").innerText = score;
+
+    document.getElementById("answer").value = "";
+    document.getElementById("answer").focus();
+
+    startTimer();
 }
 
-// Reset current answer
-function resetAnswer(){
-  currentAnswer = "";
-  document.getElementById("answer").innerText = "";
+function checkWord() {
+    const input = document.getElementById("answer").value.toLowerCase();
+    if (input === currentWord) {
+        score += 10;
+        level++;
+        saveProgress();
+        nextLevel();
+    }
 }
 
-// LAST QUESTION flow
-function showLastQuestion(){
-  document.getElementById("lastQuestionBtn").style.display = "none";
-  document.getElementById("lastQuestionPanel").style.display = "block";
+function showCompleted() {
+    clearInterval(interval);
+    document.getElementById("game").style.display = "none";
+    document.getElementById("completed").style.display = "block";
+    document.getElementById("finalScore").innerText = score;
 }
-
-function lastQuestionAnswer(ans){
-  const el = document.getElementById("lastQuestionResult");
-  if(ans){
-    el.innerText = "contact me: vorexus999@gmail.com";
-  } else {
-    el.innerText = "okay.";
-  }
-  // hide options after answer
-  document.querySelectorAll("#lastQuestionPanel button").forEach(b=>b.style.display="none");
-  // show completed text as well
-  document.getElementById("completed").style.display = "block";
-}
-
-// Optional: when user navigates away or restarts, clear timer
-window.addEventListener("beforeunload", ()=> clearInterval(timerID));
 </script>
+
 </body>
 </html>
