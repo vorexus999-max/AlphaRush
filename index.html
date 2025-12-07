@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>WordStorm</title>
+<title>WordStorm 100 Levels</title>
 <style>
 body {margin:0; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f0f0;}
 #gameContainer {width:600px; height:400px; background:#fff; border:2px solid #000; padding:20px; position:relative; text-align:center; border-radius:10px;}
@@ -34,46 +34,61 @@ const currentWordDisplay = document.getElementById('currentWord');
 const scoreDisplay = document.getElementById('score');
 const highScoreDisplay = document.getElementById('highScore');
 
-// Generate 500 words with letters already shuffled
-const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const wordList = Array.from({length: 500}, () => {
-    const len = Math.floor(Math.random()*5)+3; // word length 3-7
-    const word = Array.from({length: len}, () => letters.charAt(Math.floor(Math.random()*letters.length))).join('');
-    return word.split('').sort(()=>Math.random()-0.5).join(''); // shuffle letters
-});
+// Word list 100 kata, huruf sudah diacak, level sudah ditentukan
+const wordList = [
+"PLEAP","LEHM","WTAER","TALBE","FRIED","KNEAS","ATBLE","ENOMY","GHLIT","RUTCK",
+"OBROT","PPALE","CAHIN","HSIRT","WNIDOW","ROOD","CIRKB","LFOOR","COKIEO","MELON",
+"POSON","KFNIE","EHPON","WTCHA","LAMP","DAREB","HBSUR","DIPRE","VEBRA","SRTAS",
+"OEACN","TNOMU","FMLAE","KCURT","TEHRA","MUSIC","TSONE","WRODS","SGLAS","GNEER",
+"ALPNE","HSOUE","OSUM","ATWER","NGIHT","CAHIN","NACLE","TPIAN","WILLPO","BRCIK",
+"HORS","BEHCA","LFROO","WNIDOW","ROOD","IDREP","VEBRA","SRTAS","OACEN","TNOMU",
+"FMLAE","KCURT","GHLIT","DAREB","TSONE","WRODS","SGLAS","ENOMY","HSOUE","PPALE",
+"HBSUR","TNRIA","ALPNE","OBROT","GHSOT","HSIRT","TALBE","CAHIN","LAMP","EHPON",
+"WTCHA","COKIEO","MELON","POSON","KFNIE","BKOSO","TPIAN","NACLE","WILLPO","BRCIK"
+];
 
+let levelIndex = 0;
 let targetWord = "";
 let currentWord = "";
 let score = 0;
 let highScore = localStorage.getItem('wordScrambleHighScore') || 0;
 highScoreDisplay.textContent = `High Score: ${highScore}`;
 
-// Game functions
+// Start game
 function startGame(){
+    levelIndex = 0;
     score = 0;
     scoreDisplay.textContent = `Score: ${score}`;
     startBtn.style.display = 'none';
-    nextWord();
+    loadLevel(levelIndex);
 }
 
-function nextWord(){
-    targetWord = wordList[Math.floor(Math.random()*wordList.length)];
+// Load level
+function loadLevel(index){
+    if(index >= wordList.length){
+        alert("Congratulations! You finished all 100 levels!");
+        startBtn.style.display = 'block';
+        return;
+    }
+    targetWord = wordList[index];
     currentWord = "";
     currentWordDisplay.textContent = "";
     renderLetters();
 }
 
+// Render letters
 function renderLetters(){
     letterContainer.innerHTML = "";
     targetWord.split('').forEach(l=>{
         const btn = document.createElement('div');
         btn.classList.add('letter');
         btn.textContent = l;
-        btn.addEventListener('click', ()=> selectLetter(l, btn));
+        btn.addEventListener('click',()=>selectLetter(l, btn));
         letterContainer.appendChild(btn);
     });
 }
 
+// Select letter
 function selectLetter(letter, btn){
     currentWord += letter;
     currentWordDisplay.textContent = currentWord;
@@ -88,17 +103,17 @@ function selectLetter(letter, btn){
                 highScoreDisplay.textContent = `High Score: ${highScore}`;
                 localStorage.setItem('wordScrambleHighScore', highScore);
             }
-            setTimeout(nextWord, 500);
+            levelIndex++;
+            setTimeout(()=>loadLevel(levelIndex), 500);
         } else {
             btn.classList.add('wrong');
-            setTimeout(nextWord, 700);
+            setTimeout(()=>loadLevel(levelIndex), 700);
         }
     }
 }
 
 // Event
 startBtn.addEventListener('click', startGame);
-
 </script>
 </body>
 </html>
