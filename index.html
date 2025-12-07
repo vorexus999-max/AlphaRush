@@ -4,33 +4,17 @@
 <meta charset="UTF-8">
 <title>WordStorm</title>
 <style>
-body {
-    margin:0; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f0f0;
-}
-#gameContainer {
-    width:600px; height:400px; background:#fff; border:2px solid #000; padding:20px; position:relative; text-align:center; border-radius:10px;
-}
-#letterContainer {
-    display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; gap:10px;
-}
-.letter {
-    width:50px; height:50px; display:flex; justify-content:center; align-items:center;
-    background:#3498db; color:#fff; font-weight:bold; font-size:22px; cursor:pointer; border-radius:5px;
-    user-select:none; transition: transform 0.2s, background 0.2s;
-}
-.letter.clicked { background:#95a5a6; transform: scale(0.9); pointer-events:none; }
-.letter.wrong { background:#e74c3c; }
-#currentWord {
-    font-size:28px; margin-top:20px; min-height:40px; letter-spacing:5px;
-}
-#startBtn {
-    padding:10px 25px; font-size:20px; cursor:pointer; margin-top:10px;
-}
-#score, #highScore {
-    position:absolute; font-size:18px; color:#000;
-}
-#score { left:10px; top:10px; }
-#highScore { right:10px; top:10px; }
+body {margin:0; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f0f0;}
+#gameContainer {width:600px; height:400px; background:#fff; border:2px solid #000; padding:20px; position:relative; text-align:center; border-radius:10px;}
+#letterContainer {display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; gap:10px;}
+.letter {width:50px; height:50px; display:flex; justify-content:center; align-items:center; background:#3498db; color:#fff; font-weight:bold; font-size:22px; cursor:pointer; border-radius:5px; user-select:none; transition: transform 0.2s, background 0.2s;}
+.letter.clicked {background:#95a5a6; transform: scale(0.9); pointer-events:none;}
+.letter.wrong {background:#e74c3c;}
+#currentWord {font-size:28px; margin-top:20px; min-height:40px; letter-spacing:5px;}
+#startBtn {padding:10px 25px; font-size:20px; cursor:pointer; margin-top:10px;}
+#score, #highScore {position:absolute; font-size:18px; color:#000;}
+#score {left:10px; top:10px;}
+#highScore {right:10px; top:10px;}
 </style>
 </head>
 <body>
@@ -50,30 +34,19 @@ const currentWordDisplay = document.getElementById('currentWord');
 const scoreDisplay = document.getElementById('score');
 const highScoreDisplay = document.getElementById('highScore');
 
-// Letters and 500-word list
-const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
-const wordList = [];
-function generateRandomWord(length){
-    let word = "";
-    for(let i=0;i<length;i++){
-        word += letters[Math.floor(Math.random()*letters.length)];
-    }
-    return word;
-}
-// Generate 500 words (3-7 letters)
-for(let i=0;i<500;i++){
-    const len = Math.floor(Math.random()*5)+3;
-    wordList.push(generateRandomWord(len));
-}
+// Generate 500 words with letters already shuffled
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const wordList = Array.from({length: 500}, () => {
+    const len = Math.floor(Math.random()*5)+3; // word length 3-7
+    const word = Array.from({length: len}, () => letters.charAt(Math.floor(Math.random()*letters.length))).join('');
+    return word.split('').sort(()=>Math.random()-0.5).join(''); // shuffle letters
+});
 
 let targetWord = "";
 let currentWord = "";
 let score = 0;
 let highScore = localStorage.getItem('wordScrambleHighScore') || 0;
 highScoreDisplay.textContent = `High Score: ${highScore}`;
-
-// Utility
-function shuffleArray(arr){ return arr.sort(()=>Math.random()-0.5); }
 
 // Game functions
 function startGame(){
@@ -92,12 +65,11 @@ function nextWord(){
 
 function renderLetters(){
     letterContainer.innerHTML = "";
-    const shuffled = shuffleArray(targetWord.split(''));
-    shuffled.forEach(l=>{
+    targetWord.split('').forEach(l=>{
         const btn = document.createElement('div');
         btn.classList.add('letter');
         btn.textContent = l;
-        btn.addEventListener('click',()=>selectLetter(l, btn));
+        btn.addEventListener('click', ()=> selectLetter(l, btn));
         letterContainer.appendChild(btn);
     });
 }
@@ -116,10 +88,10 @@ function selectLetter(letter, btn){
                 highScoreDisplay.textContent = `High Score: ${highScore}`;
                 localStorage.setItem('wordScrambleHighScore', highScore);
             }
-            setTimeout(nextWord,500);
+            setTimeout(nextWord, 500);
         } else {
             btn.classList.add('wrong');
-            setTimeout(nextWord,700);
+            setTimeout(nextWord, 700);
         }
     }
 }
