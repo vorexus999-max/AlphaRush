@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flappy Bird Mini</title>
+<style>
+body {
+    margin:0; overflow:hidden; background:#70c5ce; display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif;
+}
+#gameContainer {
+    position:relative; width:400px; height:600px; overflow:hidden; border:2px solid #000; background: linear-gradient(to bottom, #70c5ce 0%, #fff 100%);
+}
+#background1, #background2 {
+    position:absolute; width:400px; height:600px; top:0; z-index:0; background: linear-gradient(to bottom, #8ed6ff, #70c5ce);
+}
+#bird {
+    position:absolute; width:40px; height:40px; background:yellow; border-radius:50%; top:250px; left:100px; z-index:1; transform-origin:center;
+}
+.pipe {
+    position:absolute; width:60px; background:green; z-index:1;
+}
+#startBtn, #gameOverScreen {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); padding:10px 20px; font-size:20px; cursor:pointer; z-index:2;
+    background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:5px; text-align:center;
+}
+#gameOverScreen { display:none; }
+#score, #highScore {
+    position:absolute; top:10px; font-size:20px; color:#fff; z-index:2;
+}
+#score { left:10px; }
+#highScore { right:10px; }
+</style>
+</head>
+<body>
+<div id="gameContainer">
+    <div id="background1"></div>
+    <div id="background2" style="left:400px;"></div>
+    <div id="bird"></div>
+    <button id="startBtn">Start</button>
+    <div id="score">Score: 0</div>
+    <div id="highScore">High Score: 0</div>
+    <div id="gameOverScreen">Game Over<br>Click to Restart</div>
+</div>
+
+<script>
+// Elements
+const bird = document.getElementById('bird');
+const bg1 = document.getElementById('background1');
+const bg2 = document.getElementById('background2');
+const gameContainer = document.getElementById('gameContainer');
+const startBtn = document.getElementById('startBtn');
+const scoreDisplay = document.getElementById('score');
+const highScoreDisplay = document.getElementById('highScore');
+const gameOverScreen = document.getElementById('gameOverScreen');
+
+// Game variables
+let birdY = 250;
+let velocity = 0;
+const gravity = 0.6;
+const jumpForce = -10;
+let pipes = [];
+let score = 0;
+let highScore = localStorage.getItem('flappyHighScore') || 0;
+highScoreDisplay.textContent = `High Score: ${highScore}`;
+let animationId;
+let gameRunning = false;
+let bgX1 = 0;
+let bgX2 = 400;
+let pipeSpeed = 2;
+
+// Sound Effects
+const jumpSound = new Audio('https://freesound.org/data/previews/341/341695_6261263-lq.mp3'); // jump
+const hitSound = new Audio('https://freesound.org/data/previews/341/341695_6261263-lq.mp3'); // hit
+const scoreSound = new Audio('https://freesound.org/data/previews/331/331912_3248244-lq.mp3'); // score
+
+// Functions
+function createPipe() {
+    const pipeGap = 150;
+    const pipeHeight = Math.floor(Math.random() * 250) + 50;
+    const topPipe = document.createElement('div');
+    const bottomPipe = document.createElement('div');
+    topPipe.classList.add('pipe');
+    bottomPipe.classList.add('pipe');
+    topPipe.style.height = `${pipeHeight}px`;
+    topPipe.style.top = `0px`;
+    topPipe.style.left = `400px`;
+    bottomPipe.style.height = `${600 - pipeHeight - pipeGap}px`;
+    bottomPipe.style.top = `${pipeHeight + pipeGap}px`;
+    bottomPipe.style.left = `400px`;
+    gameContainer.appendChild(topPipe);
+    gameContainer.appendChild(bottomPipe);
+    pipes.push({ topPipe, bottomPipe, scored:false });
+}
+
+function jump() {
+    velocity = jumpForce;
+    jumpSound.play();
+}
+
+function resetGame() {
+    hitSound.play();
+    gameRunning = false;
+    cancelAnimationFrame(animationId);
+    pipes.forEach(p => {
+        gameContainer.removeChild(p.topPipe);
+        gameContainer.removeChild(p.bottomPipe);
+    });
+    pipes = [];
+    birdY = 250;
+    velocity = 0;
+    score = 0;
+    pipeSpeed = 2;
+    scoreDisplay.textContent = `Score: 0`;
+    startBtn.style.display = 'block';
+    gameOverScreen.style.display = 'block';
+}
+
+function gameLoop() {
+    // Bird movement
+    velocity += gravity;
+    birdY += velocity;
+    if (birdY < 0) birdY = 0;
+    bird.style.top = birdY + 'px';
+    bird.style.transform = `rotate(${Math.min(velocity * 4, 90)}deg)`; // rotation animation
+
+    // Background movement
+    bgX1 -= 1; bgX2 -= 1;
+    if(bgX1 <= -400) bgX1 = 400;
+    if(bgX2 <= -400) bgX2 = 400;
+    bg1.style.left = bgX1 + 'px';
+    bg2.style.left = bgX2 + 'px';
+
+    // Pipes movement
+    pipes.forEach(p => {
+        let left = parseInt(p.topPipe.style.left) - pipeSpeed;
+        p.topPipe.style.left = left + 'px';
+        p.bottomPipe.style.left = left + 'px';
+
+        // Scoring
+        if(!p.scored && left + 60 < 100) {
+            score++;
+            scoreDisplay.textContent = `Score: ${score}`;
+            scoreSound.play();
+            p.scored = true;
+            if(score > highScore) {
+                highScore = score;
+                highScoreDisplay.textContent = `High Score: ${highScore}`;
+                localStorage.setItem('flappyHighScore', highScore);
+            }
+            if(score % 5 === 0) pipeSpeed += 0.5; // increase difficulty
+        }
+
+        // Collision
+        if(left < 140 && left + 60 > 100) {
+            if(birdY < parseInt(p.topPipe.style.height) || birdY + 40 > parseInt(p.bottomPipe.style.top)) {
+                resetGame();
+            }
+        }
+    });
+
+    // Boundaries
+    if(birdY + 40 > 600) resetGame();
+
+    // Add new pipe
+    if(pipes.length === 0 || parseInt(pipes[pipes.length-1].topPipe.style.left) < 250) createPipe();
+
+    animationId = requestAnimationFrame(gameLoop);
+}
+
+// Event listeners
+startBtn.addEventListener('click', () => {
+    if(!gameRunning){
+        gameRunning = true;
+        startBtn.style.display = 'none';
+        gameOverScreen.style.display = 'none';
+        createPipe();
+        animationId = requestAnimationFrame(gameLoop);
+    }
+});
+
+document.addEventListener('keydown', e => { if(e.code === 'Space' && gameRunning) jump(); });
+document.addEventListener('click', () => { if(gameRunning) jump(); });
+gameOverScreen.addEventListener('click', () => { startBtn.click(); });
+</script>
+</body>
+</html>
