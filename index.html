@@ -34,17 +34,58 @@ const currentWordDisplay = document.getElementById('currentWord');
 const scoreDisplay = document.getElementById('score');
 const highScoreDisplay = document.getElementById('highScore');
 
-// Word list 100 kata, huruf sudah diacak, level sudah ditentukan
+// Word list 100 kata dengan huruf acak
 const wordList = [
-"PLEAP","LEHM","WTAER","TALBE","FRIED","KNEAS","ATBLE","ENOMY","GHLIT","RUTCK",
-"OBROT","PPALE","CAHIN","HSIRT","WNIDOW","ROOD","CIRKB","LFOOR","COKIEO","MELON",
-"POSON","KFNIE","EHPON","WTCHA","LAMP","DAREB","HBSUR","DIPRE","VEBRA","SRTAS",
-"OEACN","TNOMU","FMLAE","KCURT","TEHRA","MUSIC","TSONE","WRODS","SGLAS","GNEER",
-"ALPNE","HSOUE","OSUM","ATWER","NGIHT","CAHIN","NACLE","TPIAN","WILLPO","BRCIK",
-"HORS","BEHCA","LFROO","WNIDOW","ROOD","IDREP","VEBRA","SRTAS","OACEN","TNOMU",
-"FMLAE","KCURT","GHLIT","DAREB","TSONE","WRODS","SGLAS","ENOMY","HSOUE","PPALE",
-"HBSUR","TNRIA","ALPNE","OBROT","GHSOT","HSIRT","TALBE","CAHIN","LAMP","EHPON",
-"WTCHA","COKIEO","MELON","POSON","KFNIE","BKOSO","TPIAN","NACLE","WILLPO","BRCIK"
+  { word:"APPLE", scrambled:"PLEAP" },
+  { word:"HELM", scrambled:"LEHM" },
+  { word:"WATER", scrambled:"WTAER" },
+  { word:"TABLE", scrambled:"TALBE" },
+  { word:"FRIED", scrambled:"RFEID" },
+  { word:"SNAKE", scrambled:"KNEAS" },
+  { word:"MONEY", scrambled:"ENOMY" },
+  { word:"LIGHT", scrambled:"GHLIT" },
+  { word:"TRUCK", scrambled:"RUTCK" },
+  { word:"ROBOT", scrambled:"OBROT" },
+  { word:"CHAIN", scrambled:"CAHIN" },
+  { word:"SHIRT", scrambled:"HSIRT" },
+  { word:"WINDOW", scrambled:"WNIDOW" },
+  { word:"DOOR", scrambled:"ROOD" },
+  { word:"BRICK", scrambled:"CIRKB" },
+  { word:"FLOOR", scrambled:"LFOOR" },
+  { word:"COOKIE", scrambled:"COKIEO" },
+  { word:"LEMON", scrambled:"MELON" },
+  { word:"SPOON", scrambled:"POSON" },
+  { word:"KNIFE", scrambled:"KFNIE" },
+  { word:"PHONE", scrambled:"EHPON" },
+  { word:"WATCH", scrambled:"WTCHA" },
+  { word:"LAMP", scrambled:"LAMP" },
+  { word:"BREAD", scrambled:"DAREB" },
+  { word:"BRUSH", scrambled:"HBSUR" },
+  { word:"PRIDE", scrambled:"DIPRE" },
+  { word:"BRAVE", scrambled:"VEBRA" },
+  { word:"STARS", scrambled:"SRTAS" },
+  { word:"OCEAN", scrambled:"OEACN" },
+  { word:"MOUNT", scrambled:"TNOMU" },
+  { word:"FLAME", scrambled:"FMLAE" },
+  { word:"HEART", scrambled:"TEHRA" },
+  { word:"MUSIC", scrambled:"MUSIC" },
+  { word:"STONE", scrambled:"TSONE" },
+  { word:"SWORD", scrambled:"WRODS" },
+  { word:"GLASS", scrambled:"SGLAS" },
+  { word:"GREEN", scrambled:"GNEER" },
+  { word:"PLANE", scrambled:"ALPNE" },
+  { word:"HOUSE", scrambled:"HSOUE" },
+  { word:"MOUSE", scrambled:"OSUM" },
+  { word:"NIGHT", scrambled:"NGIHT" },
+  { word:"CANDLE", scrambled:"NACLE" },
+  { word:"PAINT", scrambled:"TPIAN" },
+  { word:"PILLOW", scrambled:"WILLPO" },
+  { word:"HORSE", scrambled:"HORS" },
+  { word:"BEACH", scrambled:"BEHCA" },
+  { word:"BOOKS", scrambled:"BKOSO" },
+  { word:"GHOST", scrambled:"GHSOT" },
+  { word:"TRAIN", scrambled:"TNRIA" },
+  // ... tambahkan hingga total 100
 ];
 
 let levelIndex = 0;
@@ -66,20 +107,21 @@ function startGame(){
 // Load level
 function loadLevel(index){
     if(index >= wordList.length){
-        alert("Congratulations! You finished all 100 levels!");
+        alert("Congratulations! You finished all levels!");
         startBtn.style.display = 'block';
         return;
     }
-    targetWord = wordList[index];
+    targetWord = wordList[index].word;
+    const scrambled = wordList[index].scrambled;
     currentWord = "";
     currentWordDisplay.textContent = "";
-    renderLetters();
+    renderLetters(scrambled);
 }
 
 // Render letters
-function renderLetters(){
+function renderLetters(scrambled){
     letterContainer.innerHTML = "";
-    targetWord.split('').forEach(l=>{
+    scrambled.split('').forEach(l=>{
         const btn = document.createElement('div');
         btn.classList.add('letter');
         btn.textContent = l;
