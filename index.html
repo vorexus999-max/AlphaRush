@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Word Scramble Mini - Single Word</title>
+<title>WordStorm</title>
 <style>
 body {
     margin:0; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:#f0f0f0;
@@ -50,7 +50,7 @@ const currentWordDisplay = document.getElementById('currentWord');
 const scoreDisplay = document.getElementById('score');
 const highScoreDisplay = document.getElementById('highScore');
 
-// Word list (500 random words 3-7 letters)
+// Letters and 500-word list
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
 const wordList = [];
 function generateRandomWord(length){
@@ -60,6 +60,7 @@ function generateRandomWord(length){
     }
     return word;
 }
+// Generate 500 words (3-7 letters)
 for(let i=0;i<500;i++){
     const len = Math.floor(Math.random()*5)+3;
     wordList.push(generateRandomWord(len));
@@ -71,9 +72,10 @@ let score = 0;
 let highScore = localStorage.getItem('wordScrambleHighScore') || 0;
 highScoreDisplay.textContent = `High Score: ${highScore}`;
 
-// Functions
+// Utility
 function shuffleArray(arr){ return arr.sort(()=>Math.random()-0.5); }
 
+// Game functions
 function startGame(){
     score = 0;
     scoreDisplay.textContent = `Score: ${score}`;
